@@ -29,7 +29,7 @@ int CalculateMaxCost(EdgeConGraph graph)
         {
             maxCost = courantCost;
         }
-        if (visitedEdges.size() != getGraph(graph).numNodes)
+        if (len(visitedEdges) != getGraph(graph).numNodes)
         {
             return 0;
         }
@@ -37,41 +37,44 @@ int CalculateMaxCost(EdgeConGraph graph)
     return maxCost;
 }
 
-void subsetsUtil(vector<int> &A, vector<vector<int>> &res,
-                 vector<int> &subset, int index, int sizeOfSubSet)
+void subsetsUtil(int *A, int **res, int *subset, int index, int sizeOfSubSet)
 {
-    if (subset.size() == sizeOfSubSet)
-    {
-        res.push_back(subset);
+    if (len(subset) == sizeOfSubSet)
+    {   
+        res[len(res)] = subset;
     }
 
-    for (int i = index; i < A.size(); i++)
+    for (int i = index; i < len(A); i++)
     {
 
         // include the A[i] in subset.
-        subset.push_back(A[i]);
-
+        subset[len(subset)] = A[i];
         // move onto the next element.
-        subsetsUtil(A, res, subset, i + 1);
+        subsetsUtil(A, res, subset, i + 1, sizeOfSubSet);
 
         // exclude the A[i] from subset and triggers
         // backtracking.
-        subset.pop_back();
+        deleteFromListByIndex(subsets, i);
     }
 
     return;
 }
 
-vector<vector<int>> subsets(vector<int> &A, int sizeOfSubSet)
+void deleteFromListByIndex(int *list, int ind){
+
+    for(int i=ind; i <= len(list); i++){
+        list[i] = list[i+1];
+    }
+    list[len(list)] = NULL;
+}
+
+void subsets(int *A, int sizeOfSubSet, int ** res)
 {
-    vector<int> subset;
-    vector<vector<int>> res;
+    int *subset;
 
     // keeps track of current element in vector A;
     int index = 0;
     subsetsUtil(A, res, subset, index, sizeOfSubSet);
-
-    return res;
 }
 
 bool isVisitedNode(int node, int *visited_node)
