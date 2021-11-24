@@ -189,8 +189,88 @@ int getComponentByNode(EdgeConGraph edgeGraph, int node){
 }
 
 
+//φ5 = ⋀ u∈Xj ⋀v∈ Xj’ pj,j’ ⇒ {⋁i ∈ {1,...,N} x(u,v),i}  ⋀ {⋁h ∈ {1,...,hauteur} Ꙇj,h ⇒Ꙇj’,h-1}
+Z3_ast fatherSon(Z3_context ctx,EdgeConGraph edgeGraph, int nbTrns,int treeDepth){
 
-Z3_ast fatherSon(Z3_context ctx,EdgeConGraph edgeGraph, int k,int treeDepth){
+    Z3_ast resultTab[(int) pow((double) getNumComponents(edgeGraph),4)];
+    int ind_resultTab = 0;
+
+    for(int node1=0; node1<getGraph(edgeGraph).numNodes; node1++){
+        for(int node2=0; node2<getGraph(edgeGraph).numNodes; node2++){
+
+            int nbComp_father = getComponentByNode(edgeGraph, node1);
+            int nbComp_son = getComponentByNode(edgeGraph, node2);
+
+            Z3_ast P_parentSon = getVariableParent(ctx, nbComp_son, nbComp_father);
+            Z3_ast nonP_parentSon = Z3_mk_not(ctx,P_parentSon);
+
+            //⋁i ∈ {1,...,N} x(u,v),i = a
+            Z3_ast X_Tab[nbTrns];
+            int ind_X_Tab = 0;
+
+            Z3_ast a;
+
+            if(isEdge(getGraph(edgeGraph), node1, node2)){
+                for(int tran = 0; tran < nbTrns; tran++){
+                    Z3_ast x = getVariableIsIthTranslator(ctx,  node1, node2, tran);
+
+                    X_Tab[ind_X_Tab++] = x;
+
+                }
+
+                a = Z3_mk_or(ctx,ind_X_Tab,X_Tab);
+
+            }
+
+            //{⋁h ∈ {1,...,hauteur} Ꙇj,h ⇒Ꙇj’,h-1} = b
+            Z3_ast l_Tab[treeDepth];
+            int ind_l_Tab = 0;
+            for(int level=0; level<treeDepth; level++){
+
+                Z3_ast L_jh = getVariableLevelInSpanningTree(ctx,  level, nbComp_father);
+                Z3_ast neg_L_jh = Z3_mk_not(ctx,L_jh);
+
+                Z3_ast L_jh_1 = getVariableLevelInSpanningTree(ctx,  level, nbComp_son);
+
+                Z3_ast l_Tab_tmp[2];
+
+                l_Tab_tmp[0] = neg_L_jh;
+                l_Tab_tmp[1] = L_jh_1;
+
+                Z3_ast l_tmp = Z3_mk_or(ctx,2,l_Tab_tmp);
+
+                l_Tab[ind_l_Tab++] = l_tmp;
+            }
+
+            Z3_ast b = Z3_mk_or(ctx,ind_l_Tab,l_Tab);
+
+            //a ⋀ b = c 
+
+            Z3_ast a_and_b_tab[2];
+
+            a_and_b_tab[0] = a;
+            a_and_b_tab[1] = b;
+
+            Z3_ast c = Z3_mk_and(ctx,2,a_and_b_tab);
+
+
+            // nonp ⋁ c = d
+
+            Z3_ast nonp_ou_c_tab[2];
+
+            a_and_b_tab[0] = nonP_parentSon;
+            a_and_b_tab[1] = c;
+
+            Z3_ast d = Z3_mk_or(ctx,2,a_and_b_tab);
+
+
+            resultTab[ind_resultTab++] = d;
+        }
+    }
+
+    Z3_ast form5 = Z3_mk_and(ctx,ind_resultTab,resultTab);
+    return form5;
+
 
 }
 
