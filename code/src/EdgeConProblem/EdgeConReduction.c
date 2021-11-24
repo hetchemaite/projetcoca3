@@ -41,3 +41,50 @@ void getTranslatorSetFromModel(Z3_context ctx, Z3_model model, EdgeConGraph grap
 {
     return;
 }
+
+Z3_ast translatorHasLessThenTwoEdges(Z3_context ctx,EdgeConGraph edgeGraph, int nbTrans){
+    int nbNums = getGraph(edgeGraph).numNodes;
+    Z3_ast resultTab[getGraph(edgeGraph).numEdges];
+
+    int ind_resultTab = 0;
+
+    for(int i=0; i<nbTrans; i++){
+
+
+        for(int node1 = 0; node1 < nbNums; node1++){
+            for(int node2 = 0; node2 < nbNums; node2++){
+
+
+                if(isEdge(getGraph(edgeGraph),node1,node2)){
+
+                    for(int node3 = 0; node1 < nbNums; node3++){
+                        for(int node4 = 0; node2 < nbNums; node4++){
+
+                            if(node1 != node3 || node1 != node4 || node2 != node3 || node2 != node4){
+
+                                if(isEdge(getGraph(edgeGraph),node3,node4)){
+
+                                    Z3_ast x_mi = getVariableIsIthTranslator(ctx,node1,node2,i);
+                                    Z3_ast x_ni = getVariableIsIthTranslator(ctx,node3,node4,i);
+
+                                    Z3_ast neg_x_mi = Z3_mk_not(ctx,x_mi);
+                                    Z3_ast negX_x_ni = Z3_mk_not(ctx,x_ni);
+
+                                    Z3_ast orTab[2] = {neg_x_mi,negX_x_ni};
+
+                                    Z3_ast x_mi_Union_x_ni = Z3_mk_or(ctx,3,orTab);
+
+                                    resultTab[ind_resultTab++] = x_mi_Union_x_ni;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Z3_ast Y_1 = Z3_mk_and(ctx,ind_resultTab,resultTab);
+    return Y_1;
+
+}
