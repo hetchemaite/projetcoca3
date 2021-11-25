@@ -42,6 +42,10 @@ void getTranslatorSetFromModel(Z3_context ctx, Z3_model model, EdgeConGraph grap
     return;
 }
 
+/*
+Y1 = ⋀ i ∈ {1,...,N} ⋀m ≠ n ∈ E (¬xm,i ⋁ ¬xn,i)
+Chaque convertisseur ne peut être associé à deux différents arêtes
+*/
 Z3_ast translatorHasLessThenTwoEdges(Z3_context ctx,EdgeConGraph edgeGraph, int nbTrans){
     int nbNums = getGraph(edgeGraph).numNodes;
     Z3_ast resultTab[getGraph(edgeGraph).numEdges];
@@ -89,14 +93,17 @@ Z3_ast translatorHasLessThenTwoEdges(Z3_context ctx,EdgeConGraph edgeGraph, int 
 
 }
 
-
+/*
+Y1 = ⋀h≠0 ⋀ j ∈ {1,...,CH} Ꙇj,h  ⇒ (⋁j’ ≠ j  pj,j’)
+Chaque composante connexe a au moins un parent (sauf la racine)
+*/
 Z3_ast eachComposantHasAtLeastOneParant(Z3_context ctx,EdgeConGraph edgeGraph, int treeDepth){
 
     Z3_ast resultTab[treeDepth*getNumComponents(edgeGraph)+ getNumComponents(edgeGraph) * getNumComponents(edgeGraph)];
     int ind_resultTab = 0;
 
 
-    for(int level =0; level<treeDepth; level++){
+    for(int level =1; level<treeDepth; level++){
         for(int nbComp_father=0; nbComp_father< getNumComponents(edgeGraph); nbComp_father++){
             Z3_ast L_jh = getVariableLevelInSpanningTree(ctx,  level, nbComp_father);
             Z3_ast neg_L_jh = Z3_mk_not(ctx,L_jh);
@@ -124,7 +131,10 @@ Z3_ast eachComposantHasAtLeastOneParant(Z3_context ctx,EdgeConGraph edgeGraph, i
     return Y_1;
 }
 
-
+/*
+Y2 = ⋀m≠n≠j ∈  {1,...,CH} ¬pj,m ⋁ ¬pj,n
+Chaque composante connexe ne peut avoir qu’un seul parent
+*/
 Z3_ast eachComposantHasAtMostOneParant(Z3_context ctx,EdgeConGraph edgeGraph){
 
     Z3_ast resultTab[getNumComponents(edgeGraph)];
@@ -157,7 +167,10 @@ Z3_ast eachComposantHasAtMostOneParant(Z3_context ctx,EdgeConGraph edgeGraph){
     return Y_2;
 }
 
-
+/*
+φ4 = ⋁h > k ⋁j ∈ {1,...,CH} Ꙇj,h
+Pour que l’arbre ait une profondeur > k , au moins une composante connexe doit avoir une hauteur > k.
+*/
 Z3_ast depthHigherThenK(Z3_context ctx,EdgeConGraph edgeGraph, int k,int treeDepth){
 
     Z3_ast resultTab[getNumComponents(edgeGraph)* getNumComponents(edgeGraph)];
@@ -283,7 +296,7 @@ Z3_ast allTranslatorsOnEdge(Z3_context ctx, EdgeConGraph edgeGraph, int nbTrans)
     Z3_ast resultTab[getGraph(edgeGraph).numEdges];
 
     int ind_resultTab = 0;
-    int nbEdges = getGraph(edgGraph).numEdges;
+    int nbEdges = getGraph(edgeGraph).numEdges;
 
     for (int i = 0; i < nbTrans; i++)
     {
