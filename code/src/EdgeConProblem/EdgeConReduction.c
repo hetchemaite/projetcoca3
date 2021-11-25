@@ -300,7 +300,7 @@ Z3_ast allTranslatorsOnEdge(Z3_context ctx, EdgeConGraph edgeGraph, int nbTrans)
 
     for (int i = 0; i < nbTrans; i++)
     {
-        Z3_ast unionTab[depth];
+        Z3_ast unionTab[nbTrans];
         int ind_uniontab = 0;
 
         for (int node1 = 0; node1 < nbNums; node1++)
@@ -329,13 +329,13 @@ Z3_ast eachComponentHasALevel(Z3_context ctx, EdgeConGraph edgeGraph, int depth)
     Z3_ast resultTab[nbComponents ^ 2];
     int ind_resultTab = 0;
 
-    for (int i = 0; i < depth; i++)
+    for (int j = 0; j < depth; i++)
     {
         Z3_ast unionTab[depth];
         int ind_uniontab = 0;
         for (int h; h < depth; h++)
         {
-            Z3_ast l_jh = getVariableLevelInSpanningTree(ctx,level,component);
+            Z3_ast l_jh = getVariableLevelInSpanningTree(ctx, h, j);
             unionTab[ind_uniontab++] = l_jh;
         }
         Z3_ast union_l_jh = Z3_mk_or(ctx, ind_uniontab, unionTab);
