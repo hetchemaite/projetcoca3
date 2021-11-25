@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 Z3_ast getVariableIsIthTranslator(Z3_context ctx, int node1, int node2, int number)
 {
@@ -329,7 +330,7 @@ Z3_ast eachComponentHasALevel(Z3_context ctx, EdgeConGraph edgeGraph, int depth)
     Z3_ast resultTab[nbComponents ^ 2];
     int ind_resultTab = 0;
 
-    for (int j = 0; j < depth; i++)
+    for (int j = 0; j < depth; j++)
     {
         Z3_ast unionTab[depth];
         int ind_uniontab = 0;
