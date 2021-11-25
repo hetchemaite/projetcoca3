@@ -132,9 +132,25 @@ void subsets(int *A, int sizeOfSubSet, int ** res)
 }
 */
 
+int fact(int num){
+    if(num> 0){
+        int fact =1;
+        for (int i = 1; i <= num; ++i) {
+                fact *= i;
+        }
+
+        return fact;
+    }else{
+        return 1;
+    }
+
+}
+
 int nbComb(int nbEdges, int nbTrans){
-    //TODO
-    return 0;
+    int factNbEdges = fact(nbEdges);
+    int factNbTrans = fact(nbTrans);
+    int factDiff = fact(factNbEdges - factNbTrans);
+    return (int)factNbEdges/(factNbTrans * factDiff);
 }
 
 int * subset(int *listEdges, int *data, int start, int end, int index, int nbTrans, int **subSets, int indexSub)
@@ -168,6 +184,19 @@ int ** getsubset(int *listEdges, int nbEdges, int nbTrans)
     return subset(listEdges, data, 0, nbEdges - 1, 0, nbTrans,subSets,0);
 }
 
+bool countain(int *list, int val){
+    int index = 0;
+    int elem = list[index++];
+    while (elem != NULL)
+    {
+        if(elem == val){
+            return true;
+        }
+        int elem = list[index++];
+    }
+    
+    return false;
+}
 
 int BruteForceEdgeCon(EdgeConGraph graph)
 {
@@ -178,15 +207,32 @@ int BruteForceEdgeCon(EdgeConGraph graph)
 
     //creating the list of edges
     int listEdges[nbEdges];
+    int indexEgdes = 0;
     int listSources[nbEdges];
-    int listTqrgets[nbEdges];
+    int listTargets[nbEdges];
     for(int source=0; source<nbNodes; source++){
+        for(int target=0; target<nbNodes; target++){
+            if(!countain(listSources,target)){
+                if(isEdge(getGraph(graph),source, target)){
+                    listEdges[indexEgdes] = indexEgdes;
+                    listSources[indexEgdes] = source;
+                    listTargets[indexEgdes] = target;
+
+                    indexEgdes++;
+                }
+            }
+
+
+        }
+
+
         
     }
     
     int ** tout_C = getsubset(listEdges,nbEdges,nbTrans);
 
-    int coutMax = -2147483645;
+    int coutMin = 2147483645;
+    int *current_comp;
 
     int i=0;
     int * sub = tout_C[i++];
@@ -197,12 +243,18 @@ int BruteForceEdgeCon(EdgeConGraph graph)
         int edge = sub[j++];
         while (edge != NULL)
         {
-
-            
+            addTranslator(graph,listSources[edge],listTargets[edge]);
+        }
+        int current_cout = CalculateMaxCost(graph);
+        if(current_cout !=0 &&current_cout < coutMin){
+            coutMin = current_cout;
+            current_comp = sub;
         }
     
         sub = tout_C[i++];       
     }
+
+    return coutMin;
     
 
 }
