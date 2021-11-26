@@ -8,14 +8,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "list.c"
-
-#define foreach(item, array)                         \
-    for (int keep = 1,                               \
-             count = 0,                              \
-             size = sizeof(array) / sizeof *(array); \
-         keep && count != size;                      \
-         keep = !keep, count++)                      \
-        for (item = (array) + count; keep; keep = !keep)
+#include <math.h>
 
 Z3_ast getVariableIsIthTranslator(Z3_context ctx, int node1, int node2, int number)
 {
@@ -46,73 +39,7 @@ void getTranslatorSetFromModel(Z3_context ctx, Z3_model model, EdgeConGraph grap
     return;
 }
 
-Z3_ast EdgeConReduction(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
-{
-    int nbTrans = getNumComponents(edgeGraph) - 1;
-    int nbEdges = getGraph(edgeGraph).numEdges;
-    int treeDepth = getGraph(edgeGraph).numNodes;
 
-    Z3_ast Y1 = translatorHasLessThenTwoEdges(ctx, edgeGraph, nbTrans);
-    Z3_ast Y2 = edgeHasLessThenTwoTranslator(ctx, edgeGraph, nbEdges);
-    Z3_ast Y3 = allTranslatorsOnEdge(ctx, edgeGraph, nbTrans);
-    Z3_ast F1_tab[3] = {Y1, Y2, Y3};
-    Z3_ast F1 = Z3_mk_and(ctx, 3, F1_tab);
-
-    Z3_ast Y4 = eachComposantHasAtLeastOneParant(ctx, edgeGraph, treeDepth);
-    Z3_ast Y5 = eachComposantHasAtMostOneParant(ctx, edgeGraph);
-    Z3_ast F2_tab[2] = {Y4, Y5};
-    Z3_ast F2 = Z3_mk_and(ctx, 2, F2_tab);
-
-    Z3_ast Y6 = eachComponentHasALevel(ctx, edgeGraph, treeDepth);
-    Z3_ast Y7 = eachComposantHasDiffirentLevel(ctx, edgeGraph, treeDepth);
-    Z3_ast F3_tab[2] = {Y6, Y7};
-    Z3_ast F3 = Z3_mk_and(ctx, 2, F3_tab);
-
-    Z3_ast F4 = depthHigherThenK(ctx, edgeGraph, cost, treeDepth);
-
-    Z3_ast F5 = fatherSon(ctx, edgeGraph, nbTrans, treeDepth);
-
-    Z3_ast Sat_tab[5] = {F1, F2, F3, F4, F5};
-    Z3_ast Sat = Z3_mk_and(ctx, 5, Sat_tab);
-
-    return Sat;
-}
-
-/*  Return true s'il y a une solution et modifie le graphe
-en ajoutant le nombre de convertisseurs 
-*/
-bool opt_sat(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
-{
-    Liste *source, target;
-    Z3_ast formula = EdgeConReduction(ctx, edgeGraph, cost);
-    Z3_model *model;
-    Z3_lbool isFormulaSat = solveFormula(ctx, formula, model);
-    Z3_ast x_ej;
-
-    if (isFormulaSat == Z3_L_TRUE)
-    {
-        for (int j = 1; j < i; j++)
-        {
-            for (int node1 = 0; node1 < nbNums; node1++)
-            {
-                for (int node2 = 0; node2 < nbNums; node2++)
-                {
-                    if (isEdge(getGraph(edgeGraph), node1, node2))
-                    {
-                        x_ej = getVariableIsIthTranslator(ctx, node1, node2, j);
-
-                        if (valueOfVarInModel(ctx, model, x_ej))
-                        {
-                            addTranslator(edgeGraph, node1, node2);
-                        }
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    return false;
-}
 
 ///////////////// Etapes de réduction \\\\\\\\\\\\\\\\\\\
 
@@ -509,4 +436,73 @@ Z3_ast fatherSon(Z3_context ctx, EdgeConGraph edgeGraph, int nbTrns, int treeDep
 
     Z3_ast form5 = Z3_mk_and(ctx, ind_resultTab, resultTab);
     return form5;
+}
+
+
+Z3_ast EdgeConReduction(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
+{
+    int nbTrans = getNumComponents(edgeGraph) - 1;
+    int nbEdges = getGraph(edgeGraph).numEdges;
+    int treeDepth = getGraph(edgeGraph).numNodes;
+
+    Z3_ast Y1 = translatorHasLessThenTwoEdges(ctx, edgeGraph, nbTrans);
+    Z3_ast Y2 = edgeHasLessThenTwoTranslator(ctx, edgeGraph, nbEdges);
+    Z3_ast Y3 = allTranslatorsOnEdge(ctx, edgeGraph, nbTrans);
+    Z3_ast F1_tab[3] = {Y1, Y2, Y3};
+    Z3_ast F1 = Z3_mk_and(ctx, 3, F1_tab);
+
+    Z3_ast Y4 = eachComposantHasAtLeastOneParant(ctx, edgeGraph, treeDepth);
+    Z3_ast Y5 = eachComposantHasAtMostOneParant(ctx, edgeGraph);
+    Z3_ast F2_tab[2] = {Y4, Y5};
+    Z3_ast F2 = Z3_mk_and(ctx, 2, F2_tab);
+
+    Z3_ast Y6 = eachComponentHasALevel(ctx, edgeGraph, treeDepth);
+    Z3_ast Y7 = eachComposantHasDiffirentLevel(ctx, edgeGraph, treeDepth);
+    Z3_ast F3_tab[2] = {Y6, Y7};
+    Z3_ast F3 = Z3_mk_and(ctx, 2, F3_tab);
+
+    Z3_ast F4 = depthHigherThenK(ctx, edgeGraph, cost, treeDepth);
+
+    Z3_ast F5 = fatherSon(ctx, edgeGraph, nbTrans, treeDepth);
+
+    Z3_ast Sat_tab[5] = {F1, F2, F3, F4, F5};
+    Z3_ast Sat = Z3_mk_and(ctx, 5, Sat_tab);
+
+    return Sat;
+}
+
+/*  Return true s'il y a une solution et modifie le graphe
+en ajoutant le nombre de convertisseurs 
+*/
+bool opt_sat(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
+{
+    Liste *source, target;
+    Z3_ast formula = EdgeConReduction(ctx, edgeGraph, cost);
+    Z3_model model;
+    Z3_lbool isFormulaSat = solveFormula(ctx, formula, &model);
+    Z3_ast x_ej;
+
+    if (isFormulaSat == Z3_L_TRUE)
+    {
+        for (int j = 1; j < getGraph(edgeGraph).numEdges; j++)
+        {
+            for (int node1 = 0; node1 < getGraph(edgeGraph).numNodes; node1++)
+            {
+                for (int node2 = 0; node2 < getGraph(edgeGraph).numNodes; node2++)
+                {
+                    if (isEdge(getGraph(edgeGraph), node1, node2))
+                    {
+                        x_ej = getVariableIsIthTranslator(ctx, node1, node2, j);
+
+                        if (valueOfVarInModel(ctx, model, x_ej))
+                        {
+                            addTranslator(edgeGraph, node1, node2);
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    return false;
 }

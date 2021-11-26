@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "list.c"
-
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 
 typedef struct
@@ -41,7 +41,7 @@ explore_return explorer(EdgeConGraph graph, int node, int cost, Liste *visited_n
             if (isEdgeHeterogeneous(graph, node, t))
             {
                 resultat = explorer(graph, t, cost++, visited_nodes);
-                max_cost = max(resultat.cost, cost);
+                max_cost = MAX(resultat.cost, cost);
                 for (int s = 0; s < resultat.tab->size; s++)
                 {
                     insertion(visited_nodes,s);
@@ -52,7 +52,7 @@ explore_return explorer(EdgeConGraph graph, int node, int cost, Liste *visited_n
                 if (areInSameComponent(graph, node, t))
                 {
                     resultat = explorer(graph, t, cost, visited_nodes);
-                    max_cost = max(resultat.cost, cost);
+                    max_cost = MAX(resultat.cost, cost);
                     for (int s = 0; s < resultat.tab->size; s++)
                     {
                         insertion(visited_nodes,s);
@@ -181,7 +181,7 @@ int ** getsubset(int *listEdges, int nbEdges, int nbTrans)
     int data[nbEdges];
     int subSets[nbComb(nbEdges,nbTrans)][nbTrans];
 
-    return subset(listEdges, data, 0, nbEdges - 1, 0, nbTrans,subSets,0);
+    return subSets;
 }
 
 bool countain(int *list, int val){
