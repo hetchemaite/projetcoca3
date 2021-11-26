@@ -2,8 +2,9 @@
 #include "Graph.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "list.c"
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#include "list.h"
+#include "listImp.h"
+#define MAX(x, y) (((x) > (y)) ? (x) : (y));
 
 
 typedef struct
@@ -153,46 +154,42 @@ int nbComb(int nbEdges, int nbTrans){
     return (int)factNbEdges/(factNbTrans * factDiff);
 }
 
-int * subset(int *listEdges, int *data, int start, int end, int index, int nbTrans, int **subSets, int indexSub)
+Liste * subset(Liste *listEdges, Liste *data, int start, int end, int index, int nbTrans, ListeImp *subSets, int indexSub)
 {
     int j, i;
     int currentIndex = indexSub;
     if (index == nbTrans) {
-        int eachSubSet[nbTrans];
+        Liste *eachSubSet = initialisation();
         for (j = 0; j < nbTrans; j++){
-            eachSubSet[j] = data[j];
+            insertionAt(eachSubSet, j,getElem(data,j));
         }
         return eachSubSet;
     }
     for (i = start; i <= end && end - i + 1 >= nbTrans - index; i++)
     {
-        data[index] = listEdges[i];
-        int *sub = subset(listEdges, data, i+1, end, index+1, nbTrans,subSets,currentIndex);
-        for(int j=0; j<sizeof(sub)/sizeof(sub[0]); j++){
-            subSets[i][j] = sub[j];
-        }
-        
+        insertionAt(data, index,getElem(listEdges,i));
+        Liste *sub = subset(listEdges, data, i+1, end, index+1, nbTrans,subSets,currentIndex);
+
+        insertionAtImp(subSets,i,*sub);
     }
     return NULL;
 }
 
-int ** getsubset(int *listEdges, int nbEdges, int nbTrans)
+void getsubset(Liste *listEdges, int nbEdges, int nbTrans, ListeImp *subsets)
 {
-    int data[nbEdges];
-    int subSets[nbComb(nbEdges,nbTrans)][nbTrans];
-
-    return subSets;
+    Liste *data = initialisation();
+    subset(listEdges, data, 0, nbEdges - 1, 0, nbTrans,subsets,0);
 }
 
-bool countain(int *list, int val){
+bool countain(Liste *list, int val){
     int index = 0;
-    int elem = list[index++];
+    int elem = getElem(list, index++);
     while (elem != NULL)
     {
         if(elem == val){
             return true;
         }
-        int elem = list[index++];
+        elem = getElem(list, index++);
     }
     
     return false;
@@ -206,17 +203,18 @@ int BruteForceEdgeCon(EdgeConGraph graph)
     int nbNodes = getGraph(graph).numNodes;
 
     //creating the list of edges
-    int listEdges[nbEdges];
+    Liste *listEdges = initialisation();
     int indexEgdes = 0;
-    int listSources[nbEdges];
-    int listTargets[nbEdges];
+    Liste *listSources = initialisation();
+    Liste *listTargets = initialisation();
     for(int source=0; source<nbNodes; source++){
         for(int target=0; target<nbNodes; target++){
             if(!countain(listSources,target)){
                 if(isEdge(getGraph(graph),source, target)){
-                    listEdges[indexEgdes] = indexEgdes;
-                    listSources[indexEgdes] = source;
-                    listTargets[indexEgdes] = target;
+
+                    insertionAt(listEdges,indexEgdes , indexEgdes);
+                    insertionAt(listSources,indexEgdes , source);
+                    insertionAt(listTargets,indexEgdes , target);
 
                     indexEgdes++;
                 }
@@ -229,21 +227,23 @@ int BruteForceEdgeCon(EdgeConGraph graph)
         
     }
     
-    int ** tout_C = getsubset(listEdges,nbEdges,nbTrans);
+    ListeImp *tout_C = initialisationImp();
+    getsubset(listEdges,nbEdges,nbTrans,tout_C);
 
     int coutMin = 2147483645;
-    int *current_comp;
+    Liste *current_comp = initialisation();
 
     int i=0;
-    int * sub = tout_C[i++];
+    Liste *sub = getListe(tout_C,i++);
     while (sub != NULL)
     {
         resetTranslator(graph);
         int j = 0;
-        int edge = sub[j++];
+        int edge = getElem(sub,j++);
         while (edge != NULL)
         {
-            addTranslator(graph,listSources[edge],listTargets[edge]);
+            addTranslator(graph,getElem(listSources,edge),getElem(listTargets,edge));
+            edge = getElem(sub,j++);
         }
         int current_cout = CalculateMaxCost(graph);
         if(current_cout !=0 &&current_cout < coutMin){
@@ -251,7 +251,7 @@ int BruteForceEdgeCon(EdgeConGraph graph)
             current_comp = sub;
         }
     
-        sub = tout_C[i++];       
+        sub = getListe(tout_C,i++);
     }
 
     return coutMin;

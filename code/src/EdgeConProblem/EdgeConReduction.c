@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "list.c"
+#include "list.h"
 #include <math.h>
 
 Z3_ast getVariableIsIthTranslator(Z3_context ctx, int node1, int node2, int number)
@@ -476,7 +476,8 @@ en ajoutant le nombre de convertisseurs
 */
 bool opt_sat(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
 {
-    Liste *source, target;
+    Liste *source; 
+    Liste *target;
     Z3_ast formula = EdgeConReduction(ctx, edgeGraph, cost);
     Z3_model model;
     Z3_lbool isFormulaSat = solveFormula(ctx, formula, &model);

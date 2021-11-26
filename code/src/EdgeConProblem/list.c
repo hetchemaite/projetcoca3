@@ -1,20 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "list.h"
 
-
-typedef struct Element Element;
-struct Element
-{
-    int nombre;
-    Element *suivant;
-};
-
-typedef struct Liste Liste;
-struct Liste
-{
-    Element *premier;
-    int size;
-};
 
 Liste *initialisation()
 {
@@ -26,6 +13,7 @@ Liste *initialisation()
     element->suivant = NULL;
     liste->premier = element;
 
+    liste->size = 0;
     return liste;
 }
 
@@ -40,6 +28,22 @@ void insertion(Liste *liste, int nvNombre)
     liste->premier = nouveau;
 
     liste->size++;
+}
+
+void insertionAt(Liste *liste,int index , int nvNombre)
+{
+    /* Création du nouvel élément */
+    Element *nouveau = malloc(sizeof(*nouveau));
+    nouveau->nombre = nvNombre;
+
+    Element *courant = liste->premier;
+    for(int i=0; i<index-1; i++){
+        courant = courant->suivant;
+    }
+
+    Element *tmp = courant->suivant;
+    courant->suivant = nouveau;
+    nouveau->suivant = tmp;
 }
 
 void suppression(Liste *liste)
@@ -68,7 +72,7 @@ void afficherListe(Liste *liste)
 }
 
 int getElem(Liste *liste,int indix){
-    Element *tmp=liste;
+    Element *tmp=liste->premier;
     int i = 0;
     /* Tant que l'on n'est pas au bout de la liste */
     while(tmp != NULL && i < indix)
@@ -80,6 +84,6 @@ int getElem(Liste *liste,int indix){
     if(i == indix){
         return tmp->nombre;
     }
-    return NULL;
+    return -1;
 
 }
