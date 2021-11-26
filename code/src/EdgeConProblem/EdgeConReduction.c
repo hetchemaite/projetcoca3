@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "list.c"
 
 #define foreach(item, array)                         \
     for (int keep = 1,                               \
@@ -77,38 +78,40 @@ Z3_ast EdgeConReduction(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
     return Sat;
 }
 
-int *opt_sat(Z3_context ctx, EdgeConGraph edgeGraph, int cost, int n)
+/*  Return true s'il y a une solution et modifie le graphe
+en ajoutant le nombre de convertisseurs 
+*/
+bool opt_sat(Z3_context ctx, EdgeConGraph edgeGraph, int cost)
 {
-    int *place_convertisseur;
+    Liste *source, target;
     Z3_ast formula = EdgeConReduction(ctx, edgeGraph, cost);
     Z3_model *model;
     Z3_lbool isFormulaSat = solveFormula(ctx, formula, model);
     Z3_ast x_ej;
 
-    for (int i = n; i < getGraph(edgeGraph).numEdges; i++)
+    if (isFormulaSat == Z3_L_TRUE)
     {
-        if (isFormulaSat == Z3_L_TRUE)
+        for (int j = 1; j < i; j++)
         {
-            for (int j = 1; j < i; j++)
+            for (int node1 = 0; node1 < nbNums; node1++)
             {
-                for (int node1 = 0; node1 < nbNums; node1++)
+                for (int node2 = 0; node2 < nbNums; node2++)
                 {
-                    for (int node2 = 0; node2 < nbNums; node2++)
+                    if (isEdge(getGraph(edgeGraph), node1, node2))
                     {
-                        if (isEdge(getGraph(edgeGraph), node1, node2))
-                        {
-                            x_ej = getVariableIsIthTranslator(ctx, node1, node2, j);
+                        x_ej = getVariableIsIthTranslator(ctx, node1, node2, j);
 
-                            if (valueOfVarInModel(ctx, model, x_ej))
-                            {
-                                place_convertisseur[]
-                            }
+                        if (valueOfVarInModel(ctx, model, x_ej))
+                        {
+                            addTranslator(edgeGraph, node1, node2);
                         }
                     }
                 }
             }
         }
+        return true;
     }
+    return false;
 }
 
 ///////////////// Etapes de réduction \\\\\\\\\\\\\\\\\\\
