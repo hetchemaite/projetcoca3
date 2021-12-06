@@ -356,8 +356,8 @@ int getComponentByNode(EdgeConGraph edgeGraph, int node)
 }
 Z3_ast fatherSon(Z3_context ctx, EdgeConGraph edgeGraph, int nbTrns, int treeDepth)
 {
-
-    Z3_ast resultTab[(int)pow((double)getNumComponents(edgeGraph), 4)];
+    int tmp = (double)getNumComponents(edgeGraph) * (double)getNumComponents(edgeGraph) * (double)getNumComponents(edgeGraph)* (double)getNumComponents(edgeGraph);
+    Z3_ast resultTab[(int)tmp];
     int ind_resultTab = 0;
 
     for (int node1 = 0; node1 < getGraph(edgeGraph).numNodes; node1++)
